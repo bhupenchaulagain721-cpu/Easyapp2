@@ -1,0 +1,6 @@
+{
+  "name": "Nepal Super App Architecture & Flutter Phase 1",
+  "description": "Production-ready Clean Architecture Flutter & Supabase foundation with multi-role RBAC, RLS policies, Riverpod, and GoRouter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
