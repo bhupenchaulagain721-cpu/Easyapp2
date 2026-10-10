@@ -1,0 +1,25 @@
+workflows:
+  android-workflow:
+    name: Easy App Android
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      vars:
+        SUPABASE_URL: "https://your-project.supabase.co"
+        SUPABASE_ANON_KEY: "your-anon-key"
+    scripts:
+      - name: Create android folder if missing
+        script: |
+          if [ ! -d android ]; then
+            flutter create . --platforms=android --org com.republicnepal
+          fi
+      - name: Get packages
+        script: flutter pub get
+      - name: Build APK
+        script: |
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
