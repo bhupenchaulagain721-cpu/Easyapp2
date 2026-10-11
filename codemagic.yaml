@@ -8,7 +8,7 @@ workflows:
   android-workflow:
     name: Easy App Android APK Release
     max_build_duration: 60
-    instance_type: linux_x2 # Fast cloud runner for Android builds
+    instance_type: mac_mini_m2 # Free-plan machine on Codemagic
 
     environment:
       flutter: stable
