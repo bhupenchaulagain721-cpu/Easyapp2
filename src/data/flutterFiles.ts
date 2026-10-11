@@ -15,12 +15,24 @@ import customerDashboardCode from '../../lib/features/dashboard/presentation/scr
 import businessDashboardCode from '../../lib/features/dashboard/presentation/screens/business_dashboard.dart?raw';
 import adminDashboardCode from '../../lib/features/dashboard/presentation/screens/admin_dashboard.dart?raw';
 import schemaSqlCode from '../../schema.sql?raw';
+import codemagicYamlCode from '../../codemagic.yaml?raw';
+import easyMusicScreenCode from '../../lib/features/music/presentation/screens/easy_music_screen.dart?raw';
+import appLocaleCode from '../../lib/core/localization/app_locale.dart?raw';
+import splashScreenCode from '../../lib/features/auth/presentation/screens/splash_screen.dart?raw';
+import homeScreenCode from '../../lib/features/home/presentation/screens/home_screen.dart?raw';
+import profileScreenCode from '../../lib/features/profile/presentation/screens/profile_screen.dart?raw';
+import supabaseDataRepoCode from '../../lib/features/home/data/repositories/supabase_data_repository.dart?raw';
+import homeModelsCode from '../../lib/features/home/data/models/home_models.dart?raw';
+import androidAppBuildGradleCode from '../../android/app/build.gradle?raw';
+import androidManifestCode from '../../android/app/src/main/AndroidManifest.xml?raw';
+import androidSettingsGradleCode from '../../android/settings.gradle?raw';
+import androidBuildGradleCode from '../../android/build.gradle?raw';
 
 export interface FlutterFile {
   path: string;
-  category: 'Configuration' | 'Core & Theme' | 'Domain Layer' | 'Data Layer' | 'Presentation' | 'Database / Supabase';
+  category: 'Configuration' | 'Core & Theme' | 'Domain Layer' | 'Data Layer' | 'Presentation' | 'Database / Supabase' | 'Android Native';
   description: string;
-  language: 'dart' | 'yaml' | 'sql';
+  language: 'dart' | 'yaml' | 'sql' | 'groovy' | 'xml';
   code: string;
 }
 
@@ -143,5 +155,89 @@ export const FLUTTER_FILES: FlutterFile[] = [
     description: 'Complete Supabase PostgreSQL DDL: profiles, system_settings, categories tables, triggers, and comprehensive RLS.',
     language: 'sql',
     code: schemaSqlCode,
+  },
+  {
+    path: 'codemagic.yaml',
+    category: 'Configuration',
+    description: 'Codemagic CI/CD build configuration to automatically build production Android APK and App Bundle with Supabase credentials.',
+    language: 'yaml',
+    code: codemagicYamlCode,
+  },
+  {
+    path: 'lib/features/music/presentation/screens/easy_music_screen.dart',
+    category: 'Presentation',
+    description: 'Easy Music & Radio Player (कोड म्युजिक): Nepali hits, Republic Nepal TV Live stream audio, background playback with just_audio.',
+    language: 'dart',
+    code: easyMusicScreenCode,
+  },
+  {
+    path: 'lib/core/localization/app_locale.dart',
+    category: 'Core & Theme',
+    description: 'Bilingual Nepali & English localization dictionary and reactive locale StateNotifier for Phase 1.',
+    language: 'dart',
+    code: appLocaleCode,
+  },
+  {
+    path: 'lib/features/auth/presentation/screens/splash_screen.dart',
+    category: 'Presentation',
+    description: 'Phase 1 Splash Screen: Dynamic app title, Nepali branding, language switcher, and auto-session check.',
+    language: 'dart',
+    code: splashScreenCode,
+  },
+  {
+    path: 'lib/features/home/presentation/screens/home_screen.dart',
+    category: 'Presentation',
+    description: 'Phase 1 Home Screen: Module Grid (Clinic, Kirana, Clothing, Cosmetics, Real Estate, Recycle, Local Market, Utilities) and Digital Wallet.',
+    language: 'dart',
+    code: homeScreenCode,
+  },
+  {
+    path: 'lib/features/profile/presentation/screens/profile_screen.dart',
+    category: 'Presentation',
+    description: 'Phase 1 Customer Profile: KYC status, saved addresses, orders history, data minimization notice, and language switcher.',
+    language: 'dart',
+    code: profileScreenCode,
+  },
+  {
+    path: 'lib/features/home/data/models/home_models.dart',
+    category: 'Domain Layer',
+    description: 'Data models for categories, businesses, ads, offers, branches, and ticker_items matching schema.sql.',
+    language: 'dart',
+    code: homeModelsCode,
+  },
+  {
+    path: 'lib/features/home/data/repositories/supabase_data_repository.dart',
+    category: 'Data Layer',
+    description: 'Comprehensive Supabase data repository querying profiles, businesses, categories, ads, offers, branches, ticker_items, and system_settings.',
+    language: 'dart',
+    code: supabaseDataRepoCode,
+  },
+  {
+    path: 'android/app/build.gradle',
+    category: 'Android Native',
+    description: 'Android App Build Configuration with applicationId com.republicnepal.easyapp, targetSdk 34, minSdk 21.',
+    language: 'groovy',
+    code: androidAppBuildGradleCode,
+  },
+  {
+    path: 'android/app/src/main/AndroidManifest.xml',
+    category: 'Android Native',
+    description: 'Android Manifest with package com.republicnepal.easyapp, Internet permissions, and FlutterActivity declaration.',
+    language: 'xml',
+    code: androidManifestCode,
+  },
+  {
+    path: 'android/settings.gradle',
+    category: 'Android Native',
+    description: 'Gradle settings and Flutter tool plugin management for Android build.',
+    language: 'groovy',
+    code: androidSettingsGradleCode,
+  },
+  {
+    path: 'android/build.gradle',
+    category: 'Android Native',
+    description: 'Top-level root Android Gradle configuration with Google and MavenCentral repositories.',
+    language: 'groovy',
+    code: androidBuildGradleCode,
   },
 ];

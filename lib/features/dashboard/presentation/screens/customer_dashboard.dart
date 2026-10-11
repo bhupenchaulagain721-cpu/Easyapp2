@@ -98,7 +98,7 @@ class CustomerDashboard extends ConsumerWidget {
                         Row(
                           children: [
                             Text(
-                              'Republic Nepal TV',
+                              'RN TV',
                               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                             SizedBox(width: 6),
@@ -121,7 +121,7 @@ class CustomerDashboard extends ConsumerWidget {
               ),
             ),
 
-            // Easy App Nepal Digital Wallet Card
+            // Verified Citizen Directory & Media Card (No Wallet / No Money Movement)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -148,10 +148,10 @@ class CustomerDashboard extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.account_balance_wallet_outlined, color: AppColors.accent, size: 20),
+                          const Icon(Icons.verified_user_rounded, color: AppColors.accent, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            '$dynamicTitle वालेट (Easy Wallet)',
+                            '$dynamicTitle नागरिक पोर्टल',
                             style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
                           ),
                         ],
@@ -163,7 +163,7 @@ class CustomerDashboard extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
-                          'KYC Verified ✅',
+                          'प्रमाणित सेवा ✅',
                           style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -171,43 +171,36 @@ class CustomerDashboard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'रु. २४,५००.००',
+                    'नेपाल सुपर डाइरेक्टरी',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 30,
+                      fontSize: 24,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                     ),
                   ),
                   const Text(
-                    'NPR 24,500.00 Available Balance',
+                    'प्रमाणित स्वास्थ्य, खाद्यान्न, फेसन, घरजग्गा र टिभी सेवा',
                     style: TextStyle(color: AppColors.accentLight, fontSize: 12),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _WalletActionBtn(
-                        icon: Icons.qr_code_scanner_rounded,
-                        label: 'स्क्यान पे (Scan)',
-                        onTap: () {},
-                      ),
-                      _WalletActionBtn(
-                        icon: Icons.send_rounded,
-                        label: 'रकम पठाउने',
-                        onTap: () {},
-                      ),
-                      _WalletActionBtn(
-                        icon: Icons.add_circle_outline_rounded,
-                        label: 'टपअप (Top Up)',
-                        onTap: () {},
-                      ),
-                      _WalletActionBtn(
-                        icon: Icons.receipt_long_rounded,
-                        label: 'विवरण (History)',
-                        onTap: () {},
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.info_outline_rounded, color: AppColors.accent, size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          'विज्ञापन तथा सूचना प्रसारणका लागि Easy App प्रयोग गर्नुहोस्',
+                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -279,43 +272,6 @@ class CustomerDashboard extends ConsumerWidget {
             const CompanyFooter(),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _WalletActionBtn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _WalletActionBtn({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
-          ),
-        ],
       ),
     );
   }

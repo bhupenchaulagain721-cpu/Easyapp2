@@ -47,24 +47,50 @@ abstract class AuthRepository {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  final SupabaseClient _supabase;
+  final SupabaseClient? _customClient;
 
-  AuthRepositoryImpl({SupabaseClient? client})
-      : _supabase = client ?? Supabase.instance.client;
+  AuthRepositoryImpl({SupabaseClient? client}) : _customClient = client;
+
+  SupabaseClient? get _supabase {
+    if (_customClient != null) return _customClient;
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
-  Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+  Stream<AuthState> get authStateChanges {
+    final client = _supabase;
+    if (client != null) {
+      return client.auth.onAuthStateChange;
+    }
+    return const Stream<AuthState>.empty();
+  }
 
   @override
-  User? get currentAuthUser => _supabase.auth.currentUser;
+  User? get currentAuthUser => _supabase?.auth.currentUser;
 
   @override
   Future<UserEntity> signInWithEmail({
     required String email,
     required String password,
   }) async {
+    final client = _supabase;
+    if (client == null) {
+      return UserEntity(
+        id: 'mock-user-1',
+        email: email.trim(),
+        fullName: 'Aarav Sharma (आरव शर्मा)',
+        role: AppRole.customer,
+        status: 'active',
+        createdAt: DateTime.now(),
+      );
+    }
+
     try {
-      final AuthResponse response = await _supabase.auth.signInWithPassword(
+      final AuthResponse response = await client.auth.signInWithPassword(
         email: email.trim(),
         password: password,
       );
@@ -78,7 +104,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (profile != null) {
         // Enforce moderation state
         if (profile.status == 'suspended' || profile.status == 'blocked') {
-          await _supabase.auth.signOut();
+          await client.auth.signOut();
           throw AuthException(
             profile.status == 'blocked'
                 ? 'तपाईंको खाता स्थायी रूपमा रोकिएको छ (Account Blocked by Super Admin)'
@@ -114,8 +140,20 @@ class AuthRepositoryImpl implements AuthRepository {
     String? province,
     String? city,
   }) async {
+    final client = _supabase;
+    if (client == null) {
+      return UserEntity(
+        id: 'mock-${DateTime.now().millisecondsSinceEpoch}',
+        email: email.trim(),
+        fullName: fullName.trim(),
+        role: role,
+        status: role == AppRole.businessOwner ? 'pending' : 'active',
+        createdAt: DateTime.now(),
+      );
+    }
+
     try {
-      final AuthResponse response = await _supabase.auth.signUp(
+      final AuthResponse response = await client.auth.signUp(
         email: email.trim(),
         password: password,
         data: {
@@ -147,7 +185,7 @@ class AuthRepositoryImpl implements AuthRepository {
         'created_at': DateTime.now().toIso8601String(),
       };
 
-      await _supabase.from('profiles').upsert(profilePayload);
+      await client.from('profiles').upsert(profilePayload);
 
       return UserModel.fromJson(profilePayload);
     } on AuthException catch (e) {
@@ -159,8 +197,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<UserEntity?> fetchUserProfile(String userId) async {
+    final client = _supabase;
+    if (client == null) return null;
     try {
-      final data = await _supabase
+      final data = await client
           .from('profiles')
           .select()
           .eq('id', userId)
@@ -175,8 +215,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    final client = _supabase;
+    if (client == null) return;
     try {
-      await _supabase.auth.signOut();
+      await client.auth.signOut();
     } catch (e) {
       throw Exception('लगआउट त्रुटि: $e');
     }
@@ -184,8 +226,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> sendPasswordReset(String email) async {
+    final client = _supabase;
+    if (client == null) return;
     try {
-      await _supabase.auth.resetPasswordForEmail(email.trim());
+      await client.auth.resetPasswordForEmail(email.trim());
     } on AuthException catch (e) {
       throw _mapAuthException(e);
     }
@@ -193,17 +237,20 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Map<String, dynamic>> fetchSystemConfig() async {
-    try {
-      final data = await _supabase
-          .from('system_settings')
-          .select('value')
-          .eq('key', 'app_config')
-          .maybeSingle();
+    final client = _supabase;
+    if (client != null) {
+      try {
+        final data = await client
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'app_config')
+            .maybeSingle();
 
-      if (data != null && data['value'] is Map) {
-        return Map<String, dynamic>.from(data['value'] as Map);
-      }
-    } catch (_) {}
+        if (data != null && data['value'] is Map) {
+          return Map<String, dynamic>.from(data['value'] as Map);
+        }
+      } catch (_) {}
+    }
 
     return {
       'app_title': 'Easy App',
@@ -215,18 +262,22 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> updateSystemConfig(Map<String, dynamic> config) async {
-    await _supabase.from('system_settings').upsert({
+    final client = _supabase;
+    if (client == null) return;
+    await client.from('system_settings').upsert({
       'key': 'app_config',
       'value': config,
       'updated_at': DateTime.now().toIso8601String(),
-      'updated_by': _supabase.auth.currentUser?.id,
+      'updated_by': client.auth.currentUser?.id,
     });
   }
 
   @override
   Future<List<Map<String, dynamic>>> fetchCategories() async {
+    final client = _supabase;
+    if (client == null) return [];
     try {
-      final response = await _supabase
+      final response = await client
           .from('categories')
           .select()
           .order('sort_order', ascending: true);
@@ -239,7 +290,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> toggleCategory({required String id, required bool isActive}) async {
-    await _supabase.from('categories').update({
+    final client = _supabase;
+    if (client == null) return;
+    await client.from('categories').update({
       'is_active': isActive,
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', id);
@@ -247,18 +300,24 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> createCategory(Map<String, dynamic> category) async {
-    await _supabase.from('categories').insert(category);
+    final client = _supabase;
+    if (client == null) return;
+    await client.from('categories').insert(category);
   }
 
   @override
   Future<void> deleteCategory(String id) async {
-    await _supabase.from('categories').delete().eq('id', id);
+    final client = _supabase;
+    if (client == null) return;
+    await client.from('categories').delete().eq('id', id);
   }
 
   @override
   Future<List<UserEntity>> fetchAllUsers() async {
+    final client = _supabase;
+    if (client == null) return [];
     try {
-      final response = await _supabase
+      final response = await client
           .from('profiles')
           .select()
           .order('created_at', ascending: false);
@@ -273,7 +332,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> updateUserStatus({required String userId, required String status}) async {
-    await _supabase.from('profiles').update({
+    final client = _supabase;
+    if (client == null) return;
+    await client.from('profiles').update({
       'status': status,
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', userId);
@@ -281,7 +342,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> deleteUserAccount(String userId) async {
-    await _supabase.from('profiles').delete().eq('id', userId);
+    final client = _supabase;
+    if (client == null) return;
+    await client.from('profiles').delete().eq('id', userId);
   }
 
   AuthException _mapAuthException(AuthException e) {

@@ -5,37 +5,42 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/app_roles.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
-import 'features/auth/presentation/screens/auth_gate.dart';
+import 'features/auth/presentation/screens/splash_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/register_screen.dart';
+import 'features/home/presentation/screens/home_screen.dart';
+import 'features/profile/presentation/screens/profile_screen.dart';
 import 'features/dashboard/presentation/screens/admin_dashboard.dart';
 import 'features/dashboard/presentation/screens/business_dashboard.dart';
 import 'features/dashboard/presentation/screens/customer_dashboard.dart';
 
-const String _kDefaultSupabaseUrl = String.fromEnvironment(
-  'SUPABASE_URL',
-  defaultValue: 'https://easyapp.supabase.co',
-);
-
-const String _kDefaultSupabaseAnonKey = String.fromEnvironment(
-  'SUPABASE_ANON_KEY',
-  defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_anon_key_for_development',
-);
+// Reading SUPABASE_URL and SUPABASE_ANON_KEY from --dart-define
+// Example: flutter run --dart-define=SUPABASE_URL=https://xyz.supabase.co --dart-define=SUPABASE_ANON_KEY=eyJ...
+const String kSupabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const String kSupabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await Supabase.initialize(
-      url: _kDefaultSupabaseUrl,
-      anonKey: _kDefaultSupabaseAnonKey,
-      authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
-        autoRefreshToken: true,
-      ),
+  if (kSupabaseUrl.isNotEmpty && kSupabaseAnonKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(
+        url: kSupabaseUrl,
+        anonKey: kSupabaseAnonKey,
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.pkce,
+          autoRefreshToken: true,
+        ),
+      );
+      debugPrint('Easy App: Supabase initialized with anon key.');
+    } catch (e) {
+      debugPrint('Easy App Supabase Initialization Notice: $e');
+    }
+  } else {
+    debugPrint(
+      'Notice: SUPABASE_URL and SUPABASE_ANON_KEY were not passed via --dart-define.\n'
+      'App running with fallback local data state for UI development.',
     );
-  } catch (e) {
-    debugPrint('Easy App Supabase Notice: $e');
   }
 
   runApp(
@@ -51,10 +56,11 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     routes: [
+      // Phase 1 Routes
       GoRoute(
         path: '/',
-        name: 'auth_gate',
-        builder: (context, state) => const AuthGate(),
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
         path: '/login',
@@ -67,9 +73,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
+        path: '/home',
+        name: 'home',
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+
+      // Multi-Role Dashboards (backward compatible)
+      GoRoute(
         path: '/customer-dashboard',
         name: 'customer_dashboard',
-        builder: (context, state) => const CustomerDashboard(),
+        builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
         path: '/business-dashboard',
@@ -85,31 +103,17 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       if (!authState.isInitialCheckDone) return null;
 
-      final isGoingToAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      final isGoingToAuth = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register' ||
+          state.matchedLocation == '/';
       final isAuthenticated = authState.isAuthenticated && authState.user != null;
 
-      if (!isAuthenticated && !isGoingToAuth && state.matchedLocation != '/') {
+      if (!isAuthenticated && !isGoingToAuth) {
         return '/login';
       }
 
-      if (isAuthenticated && isGoingToAuth) {
-        return authState.role.defaultRoutePath;
-      }
-
-      if (isAuthenticated) {
-        final role = authState.role;
-        final loc = state.matchedLocation;
-
-        if (loc == '/admin-dashboard' && role != AppRole.superAdmin) {
-          return role.defaultRoutePath;
-        }
-
-        if (loc == '/business-dashboard' &&
-            role != AppRole.businessOwner &&
-            role != AppRole.staff &&
-            role != AppRole.superAdmin) {
-          return '/customer-dashboard';
-        }
+      if (isAuthenticated && (state.matchedLocation == '/login' || state.matchedLocation == '/register')) {
+        return '/home';
       }
 
       return null;
@@ -123,7 +127,6 @@ class EasyAppRoot extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    // Listen to dynamic title from database system_settings
     final dynamicTitle = ref.watch(dynamicTitleProvider);
 
     return MaterialApp.router(

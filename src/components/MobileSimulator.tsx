@@ -58,6 +58,13 @@ import {
   Home,
   Tag,
   Share2,
+  Music,
+  Radio,
+  Volume2,
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
 } from 'lucide-react';
 import { BusinessItem, CategoryItem } from './WebAdminPanel';
 
@@ -84,6 +91,7 @@ interface MobileSimulatorProps {
   onToggleCategory?: (id: string) => void;
   onUpdateAppTitle?: (title: string) => void;
   onOpenAdminPanel?: () => void;
+  onOpenApkStation?: () => void;
 }
 
 export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
@@ -97,12 +105,23 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
   onToggleCategory,
   onUpdateAppTitle,
   onOpenAdminPanel,
+  onOpenApkStation,
 }) => {
   // Screens & Tabs
   const [screen, setScreen] = useState<'splash' | 'login' | 'register' | 'dashboard'>('dashboard');
-  const [activeBottomTab, setActiveBottomTab] = useState<'home' | 'businesses' | 'tv' | 'profile'>('home');
+  const [activeBottomTab, setActiveBottomTab] = useState<'home' | 'businesses' | 'music' | 'tv' | 'profile'>('home');
   const [isDark, setIsDark] = useState(false);
   const [lang, setLang] = useState<'np' | 'en'>('np');
+
+  // Music & Radio Player state (कोड म्युजिक)
+  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const nepaliPlaylist = [
+    { id: '1', title: 'Republic Nepal Live Audio Broadcast', artist: 'Republic Nepal TV & Radio', category: 'Live FM 98.4 MHz', duration: 'LIVE' },
+    { id: '2', title: 'Resham Firiri (रेशम फिरिरी)', artist: 'Himalayan Folk Flute & Sarangi', category: 'Folk Classic', duration: '04:12' },
+    { id: '3', title: 'Maya Pirati (माया पिरती)', artist: 'Aarav Sharma & Priya KC', category: 'Modern Adhunik Hit', duration: '03:48' },
+    { id: '4', title: 'Sirphul Siraima (शिरफूल शिरैमा)', artist: 'Gandaki Lok Dohori Pariwar', category: 'Lok Dohori', duration: '05:02' },
+  ];
 
   // Business Detail & Registration Modals
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessItem | null>(null);
@@ -123,9 +142,132 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
   const [regBizPan, setRegBizPan] = useState('');
   const [registrationSuccessBanner, setRegistrationSuccessBanner] = useState(false);
 
-  // Quick Action Modals (Scan, Send, Top-up, Electricity)
+  // Quick Action Modals
   const [activeActionModal, setActiveActionModal] = useState<'scan' | 'send' | 'topup' | 'electricity' | null>(null);
   const [selectedCategoryDetail, setSelectedCategoryDetail] = useState<string | null>(null);
+
+  // Version 1: Connected Supabase tables state (ticker_items: kind news, notice, market_rate, ordered by sort_order)
+  const [tickerItems, setTickerItems] = useState([
+    {
+      id: 't1',
+      kind: 'market_rate',
+      category: 'market_rate',
+      rateItem: 'Gold / Silver',
+      rateValue: 'रु. १,६२,०००',
+      message: 'Gold: रु. १,६२,००० / तोला | Silver: रु. १,९५० / तोला (नेपाल सुनचाँदी)',
+      messageNp: 'सुन: रु. १,६२,०००/तोला | चाँदी: रु. १,९५०/तोला (नेपाल सुनचाँदी)',
+      sort_order: 1,
+      status: 'approved',
+    },
+    {
+      id: 't2',
+      kind: 'market_rate',
+      category: 'market_rate',
+      rateItem: 'Vegetables',
+      rateValue: 'कालीमाटी',
+      message: 'Kalimati: Tomato रु. ५५/केजी | Potato रु. ४२/केजी | Onion रु. ८५/केजी',
+      messageNp: 'कालीमाटी: गोलभेडा रु. ५५/केजी, रातो आलु रु. ४२/केजी, प्याज रु. ८५/केजी',
+      sort_order: 2,
+      status: 'approved',
+    },
+    {
+      id: 't3',
+      kind: 'market_rate',
+      category: 'market_rate',
+      rateItem: 'Forex',
+      rateValue: 'NRB Rate',
+      message: 'Forex: USD $1 = NPR 134.20 | EUR €1 = NPR 146.50 (NRB)',
+      messageNp: 'मुद्रा: अमेरिकी डलर १ = रु. १३४.२०, युरो १ = रु. १४६.५० (नेपाल राष्ट्र बैंक)',
+      sort_order: 3,
+      status: 'approved',
+    },
+    {
+      id: 't4',
+      kind: 'news',
+      category: 'news',
+      rateItem: 'Live TV News',
+      rateValue: 'LIVE',
+      message: 'RN TV: Special prime-time coverage streaming live tonight.',
+      messageNp: 'RN TV: आज राति ८ बजे विशेष विश्लेषणात्मक प्रत्यक्ष प्रसारण।',
+      sort_order: 4,
+      status: 'approved',
+    },
+  ]);
+  const [activeTickerIndex, setActiveTickerIndex] = useState(0);
+
+  const [adsList, setAdsList] = useState([
+    {
+      id: 'ad1',
+      title: 'Republic Nepal TV Live 24/7 Satellite',
+      titleNp: 'रिपब्लिक नेपाल टिभी २४/७ प्रत्यक्ष डिजिटल प्रसारण',
+      imageUrl: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=800',
+      sponsorName: 'Republic Nepal TV & Advertising Pvt. Ltd.',
+      placement: 'home',
+      status: 'approved',
+    },
+    {
+      id: 'ad2',
+      title: 'Organic Himalayan Herbs & Food Festival',
+      titleNp: 'जैविक हिमाली जडीबुटी तथा खाद्यान्न महोत्सव',
+      imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800',
+      sponsorName: 'Nepal Agriculture Chamber',
+      placement: 'home',
+      status: 'approved',
+    },
+    {
+      id: 'ad3',
+      title: 'Nepal Real Estate & Housing Expo 2026',
+      titleNp: 'नेपाल घरजग्गा तथा आवास मेला २०२६',
+      imageUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800',
+      sponsorName: 'Real Estate Association of Nepal',
+      placement: 'home',
+      status: 'approved',
+    },
+  ]);
+  const [activeAdIndex, setActiveAdIndex] = useState(0);
+
+  const [offersList, setOffersList] = useState([
+    {
+      id: 'o1',
+      title: 'Grand Opening Grocery Discount',
+      titleNp: 'किराना तथा दैनिक उपभोग्यमा १५% विशेष छुट',
+      discountPercent: 15,
+      couponCode: 'EASYKIRANA15',
+      status: 'approved',
+    },
+    {
+      id: 'o2',
+      title: 'Ayurvedic Health Consultation Token',
+      titleNp: 'क्लिनिक तथा ओपिडी परामर्शमा नि:शुल्क टोकन',
+      discountPercent: 25,
+      couponCode: 'SWASTHYA2026',
+      status: 'approved',
+    },
+    {
+      id: 'o3',
+      title: 'Local Haat Farmers Seasonal Offer',
+      titleNp: 'हाट बजार स्थानीय तरकारी तथा फलफूल',
+      discountPercent: 10,
+      couponCode: 'HAATBAZAR10',
+      status: 'approved',
+    },
+  ]);
+
+  // Forms for Post News & Post Ad (status: pending only)
+  const [isPostingNews, setIsPostingNews] = useState(false);
+  const [isPostingAd, setIsPostingAd] = useState(false);
+  const [newsHeadline, setNewsHeadline] = useState('');
+  const [newsHeadlineNp, setNewsHeadlineNp] = useState('');
+  const [newsCategory, setNewsCategory] = useState<'news' | 'market_rate' | 'notice'>('news');
+  const [newsPhone, setNewsPhone] = useState('');
+
+  const [adTitle, setAdTitle] = useState('');
+  const [adTitleNp, setAdTitleNp] = useState('');
+  const [adImageUrl, setAdImageUrl] = useState('https://images.unsplash.com/photo-1542838132-92c53300491e?w=800');
+  const [adSponsor, setAdSponsor] = useState('');
+  const [adPhone, setAdPhone] = useState('');
+
+  const [submissionNotice, setSubmissionNotice] = useState<string | null>(null);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('aarav.sharma@nepal.np');
@@ -364,6 +506,15 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {onOpenApkStation && (
+            <button
+              onClick={onOpenApkStation}
+              className="flex items-center gap-1.5 px-3 py-1 bg-[#C79A3E] hover:bg-[#d8a846] text-slate-950 rounded-xl text-xs font-black transition-all shadow-xs"
+              title="Build & Download APK via Codemagic"
+            >
+              <span>⚡ Build APK</span>
+            </button>
+          )}
           <button
             onClick={() => setLang(lang === 'np' ? 'en' : 'np')}
             className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-700 transition-all"
@@ -389,6 +540,16 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
             <span>
               <strong>व्यापार सफलतापूर्वक दर्ता भयो!</strong> (Waiting for Super Admin approval in Web Admin Panel)
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Submission Banner for Pending News / Ads */}
+      {submissionNotice && (
+        <div className="w-full max-w-sm bg-emerald-50 border border-emerald-300 text-emerald-950 px-4 py-3 rounded-2xl text-xs font-semibold flex items-center justify-between shadow-md animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{submissionNotice}</span>
           </div>
         </div>
       )}
@@ -440,8 +601,8 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
                 </button>
 
                 <div className="text-center pt-2">
-                  <div className="text-[9px] uppercase tracking-wider text-white/60">Powered by</div>
-                  <div className="text-[11px] font-bold text-white">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
+                  <div className="text-[10px] font-bold text-white">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                  <div className="text-[8px] text-white/60">Easy App · All rights reserved</div>
                 </div>
               </div>
             </div>
@@ -523,9 +684,8 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
 
               {/* Permanent Footer Branding */}
               <div className="text-center pt-4 border-t border-slate-200/80">
-                <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
-                <div className="text-[9px] text-slate-400">रिपब्लिक नेपाल टिभी एण्ड एडभरटाइजिङ प्रा. लि.</div>
+                <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
               </div>
             </div>
           )}
@@ -624,8 +784,8 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
               </div>
 
               <div className="text-center pt-2 border-t border-slate-200">
-                <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
+                <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
               </div>
             </div>
           )}
@@ -669,77 +829,140 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
                 {/* ========================================================================= */}
                 {activeBottomTab === 'home' && (
                   <div className="p-3.5 space-y-3.5">
-                    {/* Live Republic Nepal TV Bar */}
-                    <div className="rounded-2xl p-3 bg-gradient-to-r from-[#1E293B] to-[#0F172A] text-white shadow-md flex items-center justify-between border border-white/10">
+                    {/* Live RN TV Bar (Switches to TV Tab) */}
+                    <div
+                      onClick={() => setActiveBottomTab('tv')}
+                      className="rounded-2xl p-3 bg-gradient-to-r from-[#1E293B] to-[#0F172A] text-white shadow-md flex items-center justify-between border border-white/10 cursor-pointer hover:opacity-95 transition-all"
+                    >
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center shrink-0 shadow-sm">
-                          <Tv className="w-4 h-4 text-white" />
-                        </div>
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold">Republic Nepal TV</span>
-                            <span className="text-[8px] bg-red-500 text-white font-black px-1.5 py-0.2 rounded">
+                            <span className="text-xs font-black">RN TV</span>
+                            <span className="text-[8px] bg-red-600 text-white font-black px-1.5 py-0.5 rounded flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                               LIVE
                             </span>
                           </div>
-                          <span className="text-[9px] text-white/70">२४ घण्टा प्रत्यक्ष प्रसारण तथा समाचार</span>
+                          <span className="text-[9px] text-white/70">प्रत्यक्ष २४/७ डिजिटल तथा स्याटेलाइट प्रसारण</span>
                         </div>
                       </div>
-                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      <ChevronRight className="w-4 h-4 text-white/60" />
                     </div>
 
-                    {/* EASY WALLET & 4 EXISTING MODULES (Scan Pay, Send, Top-up, Electricity) */}
-                    <div className="rounded-2xl p-3.5 bg-gradient-to-br from-[#0F3D3E] to-[#165B5E] text-white shadow-lg shadow-[#0F3D3E]/20">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-medium text-white/80">Easy Wallet (सुपर वालेट)</span>
-                        <span className="text-[9px] bg-white/20 px-2 py-0.5 rounded font-bold">KYC Verified ✓</span>
-                      </div>
-                      <div className="text-xl font-black tracking-tight">{mockUsers.customer.balance}</div>
-                      <div className="text-[10px] text-[#E5B95C]">{mockUsers.customer.walletSub}</div>
-
-                      {/* 4 Core Quick Modules from image_0.png */}
-                      <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-white/10 text-center">
+                    {/* 1. NEWS & MARKET-RATE TICKER BAR (Supabase: ticker_items table) */}
+                    {tickerItems.filter((t) => t.status === 'approved').length > 0 && (
+                      <div className="rounded-2xl p-2.5 bg-white border border-[#C79A3E]/40 shadow-xs flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 overflow-hidden flex-1">
+                          <span className="text-[8px] bg-[#0F3D3E] text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">
+                            {tickerItems[activeTickerIndex % tickerItems.length].category === 'market_rate'
+                              ? 'RATES'
+                              : 'NEWS'}
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-800 truncate">
+                            {lang === 'np'
+                              ? tickerItems[activeTickerIndex % tickerItems.length].messageNp
+                              : tickerItems[activeTickerIndex % tickerItems.length].message}
+                          </span>
+                        </div>
                         <button
-                          onClick={() => setActiveActionModal('scan')}
-                          className="flex flex-col items-center gap-1 group"
+                          onClick={() => setIsPostingNews(true)}
+                          className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0F3D3E] shrink-0"
+                          title="Post News / Notice"
                         >
-                          <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-all">
-                            <QrCode className="w-4 h-4 text-white" />
-                          </div>
-                          <span className="text-[9px] font-medium">Scan Pay</span>
-                        </button>
-
-                        <button
-                          onClick={() => setActiveActionModal('send')}
-                          className="flex flex-col items-center gap-1 group"
-                        >
-                          <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-all">
-                            <Send className="w-4 h-4 text-white" />
-                          </div>
-                          <span className="text-[9px] font-medium">Send</span>
-                        </button>
-
-                        <button
-                          onClick={() => setActiveActionModal('topup')}
-                          className="flex flex-col items-center gap-1 group"
-                        >
-                          <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-all">
-                            <PlusCircle className="w-4 h-4 text-white" />
-                          </div>
-                          <span className="text-[9px] font-medium">Top-up</span>
-                        </button>
-
-                        <button
-                          onClick={() => setActiveActionModal('electricity')}
-                          className="flex flex-col items-center gap-1 group"
-                        >
-                          <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-all">
-                            <Zap className="w-4 h-4 text-amber-300" />
-                          </div>
-                          <span className="text-[9px] font-medium text-amber-300 font-bold">Electricity</span>
+                          <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
+                    )}
+
+                    {/* 2. APPROVED HOME BANNER ADS SLIDER (Supabase: ads table) */}
+                    {adsList.filter((a) => a.status === 'approved').length > 0 && (
+                      <div className="relative rounded-2xl overflow-hidden shadow-md border border-slate-200">
+                        <div className="h-36 relative">
+                          <img
+                            src={adsList[activeAdIndex % adsList.length].imageUrl}
+                            alt={adsList[activeAdIndex % adsList.length].title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent p-3 flex flex-col justify-end">
+                            <span className="text-[8px] uppercase bg-[#C79A3E] text-slate-950 font-black px-1.5 py-0.5 rounded w-fit mb-1">
+                              {adsList[activeAdIndex % adsList.length].sponsorName}
+                            </span>
+                            <span className="text-xs font-bold text-white line-clamp-1">
+                              {lang === 'np' && adsList[activeAdIndex % adsList.length].titleNp
+                                ? adsList[activeAdIndex % adsList.length].titleNp
+                                : adsList[activeAdIndex % adsList.length].title}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Slider dots */}
+                        <div className="absolute bottom-2 right-2 flex items-center gap-1 z-10">
+                          {adsList.map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setActiveAdIndex(idx)}
+                              className={`h-1.5 rounded-full transition-all ${
+                                activeAdIndex === idx ? 'w-4 bg-[#C79A3E]' : 'w-1.5 bg-white/60'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3. POST NEWS & POST AD ACTION BUTTONS (Inserts status 'pending' only) */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setIsPostingNews(true)}
+                        className="py-2.5 px-3 rounded-xl border border-[#0F3D3E] bg-white text-[#0F3D3E] text-[11px] font-bold flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-all shadow-xs"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>{lang === 'np' ? 'समाचार / सूचना पठाउनुहोस्' : 'Post News / Notice'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => setIsPostingAd(true)}
+                        className="py-2.5 px-3 rounded-xl bg-[#C79A3E] hover:bg-[#d8a846] text-slate-950 text-[11px] font-black flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                      >
+                        <Tv className="w-3.5 h-3.5" />
+                        <span>{lang === 'np' ? 'विज्ञापन पेश गर्नुहोस्' : 'Post Ad / Banner'}</span>
+                      </button>
                     </div>
+
+                    {/* 4. TRENDING APPROVED OFFERS & DEALS (Supabase: offers table) */}
+                    {offersList.filter((o) => o.status === 'approved').length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-slate-800">
+                            {lang === 'np' ? 'विशेष छुट तथा अफरहरू (Offers)' : 'Trending Offers & Discounts'}
+                          </span>
+                          <span className="text-[10px] text-amber-700 font-bold">
+                            {offersList.length} Active
+                          </span>
+                        </div>
+
+                        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                          {offersList.map((offer) => (
+                            <div
+                              key={offer.id}
+                              className="w-48 shrink-0 p-2.5 bg-white rounded-xl border border-amber-200/90 shadow-xs flex flex-col justify-between"
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] bg-red-100 text-red-700 font-black px-1.5 py-0.5 rounded">
+                                  {offer.discountPercent}% OFF
+                                </span>
+                                <span className="text-[9px] font-mono text-slate-400 font-bold">
+                                  {offer.couponCode}
+                                </span>
+                              </div>
+                              <span className="text-[11px] font-bold text-slate-800 line-clamp-1">
+                                {lang === 'np' ? offer.titleNp : offer.title}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* 'REGISTER MY BUSINESS' HERO BANNER (image_3.png) */}
                     <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl flex items-center justify-between shadow-xs">
@@ -836,9 +1059,8 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
 
                     {/* Permanent Footer Branding */}
                     <div className="pt-3 pb-1 text-center border-t border-slate-200/80">
-                      <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                      <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
-                      <div className="text-[9px] text-slate-400">रिपब्लिक नेपाल टिभी एण्ड एडभरटाइजिङ प्रा. लि.</div>
+                      <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                      <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
                     </div>
                   </div>
                 )}
@@ -956,31 +1178,34 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
 
                     {/* Permanent Footer Branding */}
                     <div className="pt-3 text-center border-t border-slate-200/80">
-                      <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                      <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
+                      <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                      <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
                     </div>
                   </div>
                 )}
 
                 {/* ========================================================================= */}
-                {/* TAB 3: REPUBLIC NEPAL TV & ADVERTISING STREAM */}
+                {/* TAB 3: RN TV LIVE SATELLITE & DIGITAL BROADCAST */}
                 {/* ========================================================================= */}
                 {activeBottomTab === 'tv' && (
                   <div className="p-3.5 space-y-3.5">
                     <div className="rounded-2xl overflow-hidden bg-black text-white shadow-md">
                       <div className="aspect-video bg-slate-900 relative flex items-center justify-center">
                         <Tv className="w-12 h-12 text-[#C79A3E]/60 animate-pulse" />
-                        <span className="absolute top-2 left-2 text-[9px] bg-red-600 text-white px-2 py-0.5 rounded font-black uppercase">
-                          LIVE SATELLITE
+                        <span className="absolute top-2 left-2 text-[9px] bg-red-600 text-white px-2 py-0.5 rounded font-black uppercase flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                          LIVE
                         </span>
                         <span className="absolute bottom-2 left-2 text-[10px] text-white/90 font-medium bg-black/60 px-2 py-0.5 rounded">
-                          Republic Nepal TV 24/7 News &amp; Advertising Feed
+                          RN TV 24/7 Digital Satellite Broadcast
                         </span>
                       </div>
                       <div className="p-3 bg-[#0F3D3E] flex items-center justify-between">
-                        <div>
-                          <div className="text-xs font-bold">Republic Nepal TV Official</div>
-                          <div className="text-[10px] text-white/70">Kathmandu, Nepal · 1080p Stream</div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-white">RN TV</span>
+                          <span className="text-[8px] bg-red-600 text-white font-black px-1.5 py-0.5 rounded">
+                            LIVE
+                          </span>
                         </div>
                         <span className="text-[10px] bg-[#C79A3E] text-slate-950 font-black px-2 py-0.5 rounded">
                           ON AIR
@@ -989,9 +1214,12 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
                     </div>
 
                     <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-2">
-                      <h5 className="font-bold text-xs text-slate-900">Commercial Advertisements Program</h5>
+                      <div className="flex items-center gap-2">
+                        <h5 className="font-bold text-xs text-slate-900">RN TV Commercial Advertisements Program</h5>
+                        <span className="text-[8px] bg-red-600 text-white font-black px-1.5 py-0.2 rounded">LIVE</span>
+                      </div>
                       <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Registered merchants on Easy App can advertise their products directly on Republic Nepal TV broadcasts.
+                        Registered merchants on Easy App can advertise their products directly on RN TV broadcasts.
                       </p>
                       <button
                         onClick={() => {
@@ -999,14 +1227,128 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
                         }}
                         className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold text-center"
                       >
-                        Book TV Commercial Slot
+                        Book RN TV Commercial Slot
                       </button>
                     </div>
 
                     {/* Permanent Footer Branding */}
                     <div className="pt-3 text-center border-t border-slate-200/80">
-                      <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                      <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
+                      <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                      <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ========================================================================= */}
+                {/* TAB: EASY MUSIC & RADIO PLAYER (कोड म्युजिक) */}
+                {/* ========================================================================= */}
+                {activeBottomTab === 'music' && (
+                  <div className="p-3.5 space-y-3.5">
+                    {/* Visualizer & Playing Track Card */}
+                    <div className="bg-gradient-to-br from-[#0F3D3E] to-[#165B5E] text-white p-5 rounded-3xl shadow-lg shadow-[#0F3D3E]/25 text-center space-y-3">
+                      <div className="w-20 h-20 mx-auto rounded-2xl bg-white/10 flex items-center justify-center border-2 border-[#C79A3E]/40 relative shadow-inner">
+                        <Music className="w-10 h-10 text-[#C79A3E]" />
+                        {isPlayingMusic && (
+                          <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
+                        )}
+                      </div>
+
+                      <div>
+                        <span className="text-[9px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                          {nepaliPlaylist[currentTrackIndex].category}
+                        </span>
+                        <h4 className="text-sm font-black mt-1 leading-tight text-white">
+                          {nepaliPlaylist[currentTrackIndex].title}
+                        </h4>
+                        <div className="text-[11px] text-[#E5B95C] font-medium">
+                          {nepaliPlaylist[currentTrackIndex].artist}
+                        </div>
+                      </div>
+
+                      {/* Controls */}
+                      <div className="flex items-center justify-center gap-4 pt-1">
+                        <button
+                          onClick={() => {
+                            setCurrentTrackIndex(
+                              (prev) => (prev - 1 + nepaliPlaylist.length) % nepaliPlaylist.length
+                            );
+                            setIsPlayingMusic(true);
+                          }}
+                          className="p-2 text-white/80 hover:text-white"
+                        >
+                          <SkipBack className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={() => setIsPlayingMusic(!isPlayingMusic)}
+                          className="w-11 h-11 rounded-full bg-[#C79A3E] text-slate-950 flex items-center justify-center shadow-md hover:bg-[#d8a846] transition-all"
+                        >
+                          {isPlayingMusic ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setCurrentTrackIndex((prev) => (prev + 1) % nepaliPlaylist.length);
+                            setIsPlayingMusic(true);
+                          }}
+                          className="p-2 text-white/80 hover:text-white"
+                        >
+                          <SkipForward className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Playlist items */}
+                    <div className="space-y-2">
+                      <div className="text-xs font-black text-slate-900 flex items-center justify-between">
+                        <span>चर्चित नेपाली गीत तथा प्रत्यक्ष एफएम</span>
+                        <span className="text-[10px] text-slate-400">4 Tracks</span>
+                      </div>
+
+                      {nepaliPlaylist.map((trk, idx) => (
+                        <div
+                          key={trk.id}
+                          onClick={() => {
+                            setCurrentTrackIndex(idx);
+                            setIsPlayingMusic(true);
+                          }}
+                          className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                            currentTrackIndex === idx
+                              ? 'bg-amber-50/80 border-amber-300 shadow-xs'
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs ${
+                                currentTrackIndex === idx
+                                  ? 'bg-[#0F3D3E] text-white'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}
+                            >
+                              {currentTrackIndex === idx && isPlayingMusic ? (
+                                <Radio className="w-4 h-4 text-[#C79A3E] animate-pulse" />
+                              ) : (
+                                <Music className="w-3.5 h-3.5" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-bold text-xs text-slate-900">{trk.title}</div>
+                              <div className="text-[10px] text-slate-500">
+                                {trk.artist} · {trk.category}
+                              </div>
+                            </div>
+                          </div>
+
+                          <span className="text-[10px] font-mono font-bold text-slate-400">{trk.duration}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Permanent Footer Branding */}
+                    <div className="pt-3 text-center border-t border-slate-200/80">
+                      <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                      <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
                     </div>
                   </div>
                 )}
@@ -1137,13 +1479,39 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
 
                     {/* Permanent Footer Branding */}
                     <div className="pt-3 text-center border-t border-slate-200/80">
-                      <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                      <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
-                      <div className="text-[9px] text-slate-400">रिपब्लिक नेपाल टिभी एण्ड एडभरटाइजिङ प्रा. लि.</div>
+                      <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                      <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
                     </div>
                   </div>
                 )}
               </div>
+
+              {/* Floating Mini Music Bar (if music active or user playing) */}
+              {isPlayingMusic && (
+                <div
+                  onClick={() => setActiveBottomTab('music')}
+                  className="mx-3 mb-1 p-2 bg-[#0F3D3E] text-white rounded-2xl flex items-center justify-between shadow-md cursor-pointer animate-fadeIn shrink-0 border border-white/10"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                      <Radio className="w-3.5 h-3.5 text-[#C79A3E] animate-pulse" />
+                    </div>
+                    <div className="truncate">
+                      <div className="text-[10px] font-black truncate">{nepaliPlaylist[currentTrackIndex].title}</div>
+                      <div className="text-[8px] text-white/70 truncate">{nepaliPlaylist[currentTrackIndex].artist}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setIsPlayingMusic(!isPlayingMusic)}
+                      className="p-1 rounded-full bg-white/15 text-white hover:bg-white/25"
+                    >
+                      {isPlayingMusic ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* ========================================================================= */}
               {/* BOTTOM NAVIGATION BAR */}
@@ -1170,9 +1538,22 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
                   }`}
                 >
                   <Store className="w-4 h-4" />
-                  <span className="text-[9px]">My Businesses</span>
+                  <span className="text-[9px]">Businesses</span>
                   {businesses.some((b) => b.status === 'pending') && (
-                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full absolute -top-0.5 right-3" />
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full absolute -top-0.5 right-2" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveBottomTab('music')}
+                  className={`flex flex-col items-center gap-0.5 relative ${
+                    activeBottomTab === 'music' ? 'text-[#0F3D3E] font-bold' : 'text-slate-400'
+                  }`}
+                >
+                  <Music className="w-4 h-4" />
+                  <span className="text-[9px]">Music</span>
+                  {isPlayingMusic && (
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full absolute -top-0.5 right-2 animate-ping" />
                   )}
                 </button>
 
@@ -1183,7 +1564,7 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
                   }`}
                 >
                   <Tv className="w-4 h-4" />
-                  <span className="text-[9px]">TV &amp; Ads</span>
+                  <span className="text-[9px]">TV</span>
                 </button>
 
                 <button
@@ -1308,8 +1689,8 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
 
               {/* Footer */}
               <div className="p-4 border-t border-slate-200 text-center">
-                <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
+                <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
               </div>
             </div>
           )}
@@ -1371,8 +1752,8 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
               </div>
 
               <div className="text-center pt-3 border-t border-slate-200">
-                <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
+                <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
               </div>
             </div>
           )}
@@ -1544,104 +1925,257 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
               </div>
 
               <div className="text-center pt-3 border-t border-slate-200">
-                <div className="text-[9px] uppercase tracking-wider text-slate-400">Powered by</div>
-                <div className="text-[11px] font-bold text-[#0F3D3E]">Republic Nepal TV &amp; Advertising Pvt. Ltd.</div>
+                <div className="text-[10px] font-bold text-[#0F3D3E]">Powered by रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि</div>
+                <div className="text-[8px] text-slate-400">Easy App · All rights reserved</div>
               </div>
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* ACTION MODAL: SCAN PAY, SEND, TOPUP, ELECTRICITY */}
+          {/* MODAL: POST NEWS / NOTICE FORM (Inserts status: 'pending' only) */}
+          {/* ========================================================================= */}
+          {isPostingNews && (
+            <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fadeIn">
+              <div className="bg-white rounded-3xl p-5 max-w-xs w-full shadow-2xl border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-[#0F3D3E]" />
+                    <h4 className="text-xs font-bold text-slate-900">Post News / Notice</h4>
+                  </div>
+                  <button onClick={() => setIsPostingNews(false)}>
+                    <X className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+
+                <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-[10px] text-amber-900 font-medium">
+                  Notice: Submissions enter <strong>Pending</strong> state and are verified by administrators before going live.
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Category</label>
+                    <select
+                      value={newsCategory}
+                      onChange={(e) => setNewsCategory(e.target.value as any)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs bg-white"
+                    >
+                      <option value="news">Live TV News (समाचार)</option>
+                      <option value="market_rate">Market Rate (दैनिक दररेट)</option>
+                      <option value="notice">Public Notice (सूचना)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Headline (English)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Kathmandu organic market notice"
+                      value={newsHeadline}
+                      onChange={(e) => setNewsHeadline(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Headline (नेपालीमा)</label>
+                    <input
+                      type="text"
+                      placeholder="उदा: काठमाडौँ कृषि हाटबजार सम्बन्धी सूचना"
+                      value={newsHeadlineNp}
+                      onChange={(e) => setNewsHeadlineNp(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Phone Number</label>
+                    <input
+                      type="tel"
+                      placeholder="+977 98XXXXXXXX"
+                      value={newsPhone}
+                      onChange={(e) => setNewsPhone(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs font-mono"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (!newsHeadline) return;
+                      const newItem = {
+                        id: `t_${Date.now()}`,
+                        category: newsCategory,
+                        rateItem: newsCategory === 'market_rate' ? 'Market Rate' : 'Bulletin',
+                        rateValue: 'NEW',
+                        message: newsHeadline,
+                        messageNp: newsHeadlineNp || newsHeadline,
+                        status: 'pending', // Strictly 'pending' only
+                      };
+                      setTickerItems([newItem, ...tickerItems]);
+                      setIsPostingNews(false);
+                      setNewsHeadline('');
+                      setNewsHeadlineNp('');
+                      setNewsPhone('');
+                      setSubmissionNotice('समाचार / सूचना दर्ता भयो (Status: Pending) - सुपर एडमिन स्वीकृतिको पर्खाइमा छ!');
+                      setTimeout(() => setSubmissionNotice(null), 5000);
+                    }}
+                    className="w-full mt-2 py-2 bg-[#0F3D3E] text-white rounded-xl text-xs font-bold shadow-xs hover:bg-[#165B5E]"
+                  >
+                    Submit for Review (Status: Pending)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* MODAL: POST AD FORM (Inserts status: 'pending' only) */}
+          {/* ========================================================================= */}
+          {isPostingAd && (
+            <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fadeIn">
+              <div className="bg-white rounded-3xl p-5 max-w-xs w-full shadow-2xl border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Tv className="w-4 h-4 text-[#C79A3E]" />
+                    <h4 className="text-xs font-bold text-slate-900">Post Advertisement (विज्ञापन)</h4>
+                  </div>
+                  <button onClick={() => setIsPostingAd(false)}>
+                    <X className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+
+                <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-[10px] text-amber-900 font-medium">
+                  Notice: Banner will be displayed on the Home Slider once approved (Status: Pending).
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Campaign Title</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Nepal Agro Trade Festival"
+                      value={adTitle}
+                      onChange={(e) => setAdTitle(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Title in Nepali</label>
+                    <input
+                      type="text"
+                      placeholder="उदा: नेपाल कृषि मेला २०२६"
+                      value={adTitleNp}
+                      onChange={(e) => setAdTitleNp(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Sponsor / Business Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Himalayan Natural Products"
+                      value={adSponsor}
+                      onChange={(e) => setAdSponsor(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Banner Image URL</label>
+                    <input
+                      type="url"
+                      value={adImageUrl}
+                      onChange={(e) => setAdImageUrl(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Contact Phone</label>
+                    <input
+                      type="tel"
+                      placeholder="+977 98XXXXXXXX"
+                      value={adPhone}
+                      onChange={(e) => setAdPhone(e.target.value)}
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs font-mono"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (!adTitle || !adSponsor) return;
+                      const newAd = {
+                        id: `ad_${Date.now()}`,
+                        title: adTitle,
+                        titleNp: adTitleNp || adTitle,
+                        imageUrl: adImageUrl,
+                        sponsorName: adSponsor,
+                        placement: 'home',
+                        status: 'pending', // Strictly 'pending' only
+                      };
+                      setAdsList([newAd, ...adsList]);
+                      setIsPostingAd(false);
+                      setAdTitle('');
+                      setAdTitleNp('');
+                      setAdSponsor('');
+                      setAdPhone('');
+                      setSubmissionNotice('विज्ञापन पेश भयो (Status: Pending) - रिपब्लिक नेपाल टिभी डेस्कले प्रमाणीकरण गरेपछि प्रसारण हुनेछ!');
+                      setTimeout(() => setSubmissionNotice(null), 5000);
+                    }}
+                    className="w-full mt-2 py-2 bg-[#C79A3E] text-slate-950 rounded-xl text-xs font-bold shadow-xs hover:bg-[#d8a846]"
+                  >
+                    Submit Ad for Moderation (Status: Pending)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* ACTION MODAL: ELECTRICITY UTILITY BILL INQUIRY */}
           {/* ========================================================================= */}
           {activeActionModal && (
             <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fadeIn">
               <div className="bg-white rounded-3xl p-5 max-w-xs w-full shadow-2xl border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <h4 className="text-xs font-bold text-slate-900 capitalize">
-                    {activeActionModal === 'electricity'
-                      ? 'NEA Electricity Bill'
-                      : activeActionModal === 'scan'
-                      ? 'Scan & Pay QR'
-                      : activeActionModal === 'topup'
-                      ? 'Mobile Top-Up'
-                      : 'Send Money'}
+                    NEA Electricity Bill Inquiry
                   </h4>
                   <button onClick={() => setActiveActionModal(null)}>
                     <X className="w-4 h-4 text-slate-400" />
                   </button>
                 </div>
 
-                {activeActionModal === 'electricity' && (
-                  <div className="space-y-2 text-xs">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-0.5">NEA Counter</label>
-                      <select className="w-full p-2 rounded-xl border border-slate-200 text-xs bg-white">
-                        <option>Kathmandu Central (Ratnapark)</option>
-                        <option>Baneshwor Counter</option>
-                        <option>Pokhara Counter</option>
-                        <option>Lalitpur (Patan)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Consumer ID</label>
-                      <input
-                        type="text"
-                        placeholder="012.34.567"
-                        className="w-full p-2 rounded-xl border border-slate-200 text-xs font-mono"
-                      />
-                    </div>
-                    <button
-                      onClick={() => setActiveActionModal(null)}
-                      className="w-full mt-2 py-2 bg-[#0F3D3E] text-white rounded-xl text-xs font-bold"
-                    >
-                      Inquire &amp; Pay Bill
-                    </button>
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">NEA Counter</label>
+                    <select className="w-full p-2 rounded-xl border border-slate-200 text-xs bg-white">
+                      <option>Kathmandu Central (Ratnapark)</option>
+                      <option>Baneshwor Counter</option>
+                      <option>Pokhara Counter</option>
+                      <option>Lalitpur (Patan)</option>
+                    </select>
                   </div>
-                )}
-
-                {activeActionModal === 'scan' && (
-                  <div className="text-center py-4 space-y-3">
-                    <div className="w-36 h-36 mx-auto bg-slate-900 rounded-2xl flex items-center justify-center text-white p-3 border-2 border-[#C79A3E]">
-                      <QrCode className="w-24 h-24 text-[#C79A3E]" />
-                    </div>
-                    <p className="text-[10px] text-slate-500">
-                      Align merchant QR code within the frame (Fonepay / NepalPay / EasyPay supported)
-                    </p>
-                    <button
-                      onClick={() => setActiveActionModal(null)}
-                      className="px-4 py-1.5 bg-[#0F3D3E] text-white rounded-xl text-xs font-bold"
-                    >
-                      Close Scanner
-                    </button>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Consumer ID</label>
+                    <input
+                      type="text"
+                      placeholder="012.34.567"
+                      className="w-full p-2 rounded-xl border border-slate-200 text-xs font-mono"
+                    />
                   </div>
-                )}
-
-                {(activeActionModal === 'send' || activeActionModal === 'topup') && (
-                  <div className="space-y-2 text-xs">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Mobile Number</label>
-                      <input
-                        type="tel"
-                        placeholder="98XXXXXXXX"
-                        className="w-full p-2 rounded-xl border border-slate-200 text-xs font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Amount (NPR)</label>
-                      <input
-                        type="number"
-                        placeholder="रु. ५००"
-                        className="w-full p-2 rounded-xl border border-slate-200 text-xs font-bold"
-                      />
-                    </div>
-                    <button
-                      onClick={() => setActiveActionModal(null)}
-                      className="w-full mt-2 py-2 bg-[#0F3D3E] text-white rounded-xl text-xs font-bold"
-                    >
-                      Confirm Transaction
-                    </button>
-                  </div>
-                )}
+                  <button
+                    onClick={() => setActiveActionModal(null)}
+                    className="w-full mt-2 py-2 bg-[#0F3D3E] text-white rounded-xl text-xs font-bold"
+                  >
+                    Inquire Due Amount
+                  </button>
+                </div>
               </div>
             </div>
           )}

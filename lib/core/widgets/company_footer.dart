@@ -1,23 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_colors.dart';
+import '../../features/home/presentation/providers/home_data_provider.dart';
 
 /// Permanent Footer Branding for Easy App.
-/// Mandated on Splash, Login, Registration, and Main screen bases.
-/// Displays:
-/// "Powered by"
-/// "Republic Nepal TV & Advertising Pvt. Ltd."
-class CompanyFooter extends StatelessWidget {
+/// Mandated at the very bottom of every screen:
+/// "Powered by " + app_config.footer_text (default: "रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि")
+/// Do not abbreviate it.
+class CompanyFooter extends ConsumerWidget {
   final bool isDark;
+  final bool? isDarkMode;
+  final String? footerText;
   final EdgeInsetsGeometry padding;
 
   const CompanyFooter({
     super.key,
     this.isDark = false,
-    this.padding = const EdgeInsets.symmetric(vertical: 16),
+    this.isDarkMode,
+    this.footerText,
+    this.padding = const EdgeInsets.symmetric(vertical: 14),
   });
 
+  static const String defaultFooterText = 'रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि';
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final effectiveIsDark = isDarkMode ?? isDark;
+    final configFooter = ref.watch(appConfigProvider).valueOrNull?.footerText;
+
+    final String chosenText = (footerText != null && footerText!.trim().isNotEmpty)
+        ? footerText!.trim()
+        : (configFooter != null && configFooter.trim().isNotEmpty)
+            ? configFooter.trim()
+            : defaultFooterText;
+
+    // Use full Nepali company name exactly, never an abbreviation, never English
+    final effectiveFooterText = (chosenText.toLowerCase().contains('republic') || chosenText.isEmpty)
+        ? defaultFooterText
+        : chosenText;
+
     return Padding(
       padding: padding,
       child: Column(
@@ -31,58 +52,42 @@ class CompanyFooter extends StatelessWidget {
               Container(
                 width: 14,
                 height: 1,
-                color: isDark ? Colors.white24 : AppColors.lightBorder,
+                color: effectiveIsDark ? Colors.white24 : AppColors.lightBorder,
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Powered by',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.8,
-                  color: isDark ? Colors.white60 : AppColors.lightTextMuted,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 14,
-                height: 1,
-                color: isDark ? Colors.white24 : AppColors.lightBorder,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+              const SizedBox(width: 6),
               const Icon(
                 Icons.tv_rounded,
                 size: 13,
                 color: AppColors.accent,
               ),
-              const SizedBox(width: 5),
-              Text(
-                'Republic Nepal TV & Advertising Pvt. Ltd.',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
-                  color: isDark ? AppColors.accentLight : AppColors.primary,
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  'Powered by $effectiveFooterText',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
+                    color: effectiveIsDark ? AppColors.accentLight : AppColors.primary,
+                  ),
                 ),
-                textAlign: TextAlign.center,
+              ),
+              const SizedBox(width: 6),
+              Container(
+                width: 14,
+                height: 1,
+                color: effectiveIsDark ? Colors.white24 : AppColors.lightBorder,
               ),
             ],
           ),
           const SizedBox(height: 2),
           Text(
-            'रिपब्लिक नेपाल टिभी एण्ड एडभरटाइजिङ प्रा. लि.',
+            'Easy App · All rights reserved',
             style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white38 : AppColors.lightTextMuted,
+              fontSize: 9,
+              color: effectiveIsDark ? Colors.white38 : AppColors.lightTextMuted,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

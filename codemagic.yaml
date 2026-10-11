@@ -1,25 +1,70 @@
+# ==============================================================================
+# EASY APP - CODEMAGIC CI/CD CONFIGURATION (codemagic.yaml)
+# Owner: Republic Nepal TV & Advertising Pvt. Ltd.
+# Target: Production Android APK (.apk) & App Bundle (.aab) Build
+# ==============================================================================
+
 workflows:
   android-workflow:
-    name: Easy App Android
-    instance_type: linux_x2
+    name: Easy App Android APK Release
     max_build_duration: 60
+    instance_type: linux_x2 # Fast cloud runner for Android builds
+
     environment:
-      flutter: stable
+      flutter: 3.19.0
+      java: 17
+      groups:
+        - supabase # In Codemagic dashboard: Environment variables group containing SUPABASE_URL & SUPABASE_ANON_KEY
       vars:
-        SUPABASE_URL: "https://your-project.supabase.co"
-        SUPABASE_ANON_KEY: "your-anon-key"
+        PACKAGE_NAME: "com.republicnepal.easyapp"
+        APP_NAME: "Easy App"
+
+    triggering:
+      events:
+        - push
+        - tag
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+      cancel_previous_builds: true
+
     scripts:
-      - name: Create android folder if missing
+      - name: Set up local.properties
         script: |
-          if [ ! -d android ]; then
-            flutter create . --platforms=android --org com.republicnepal
-          fi
-      - name: Get packages
-        script: flutter pub get
-      - name: Build APK
+          echo "flutter.sdk=$FLUTTER_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+
+      - name: Get Flutter dependencies
+        script: |
+          flutter packages pub get
+
+      - name: Run Flutter Static Analysis
+        script: |
+          flutter analyze --no-fatal-infos
+
+      - name: Build Android Release APK
         script: |
           flutter build apk --release \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
-            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=APP_NAME="$APP_NAME"
+
+      - name: (Optional) Build Android App Bundle (for Google Play Store)
+        script: |
+          flutter build appbundle --release \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=APP_NAME="$APP_NAME"
+
     artifacts:
-      - build/app/outputs/flutter-apk/*.apk
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/*.aab
+      - flutter_drive.log
+
+    publishing:
+      email:
+        recipients:
+          - bhupenchaulagain721@gmail.com
+        notify:
+          success: true
+          failure: true

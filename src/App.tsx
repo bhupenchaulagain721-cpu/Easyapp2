@@ -21,9 +21,10 @@ import { ArchitectureExplorer } from './components/ArchitectureExplorer';
 import { SupabaseRLSExplorer } from './components/SupabaseRLSExplorer';
 import { CodeViewer } from './components/CodeViewer';
 import { SetupGuide } from './components/SetupGuide';
+import { ApkBuildStation } from './components/ApkBuildStation';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'simulator' | 'admin' | 'architecture' | 'rls' | 'code' | 'guide'>('simulator');
+  const [activeTab, setActiveTab] = useState<'simulator' | 'admin' | 'apk' | 'architecture' | 'rls' | 'code' | 'guide'>('simulator');
   const [currentRole, setCurrentRole] = useState<AppRoleType>('customer');
 
   // Shared Dynamic State (Simulating Supabase public.system_settings table)
@@ -290,6 +291,17 @@ export default function App() {
               </button>
 
               <button
+                onClick={() => setActiveTab('apk')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'apk'
+                    ? 'bg-[#C79A3E] text-slate-950 shadow-sm font-black'
+                    : 'text-slate-700 hover:text-slate-950 font-bold bg-amber-50/70 border border-amber-200/60'
+                }`}
+              >
+                <span>⚡ Build APK (कोडम्याजिक)</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('architecture')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeTab === 'architecture'
@@ -319,7 +331,7 @@ export default function App() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Code2 className="w-3.5 h-3.5 text-[#C79A3E]" /> Flutter Code (17)
+                <Code2 className="w-3.5 h-3.5 text-[#C79A3E]" /> Flutter Code (27 Files)
               </button>
 
               <button
@@ -361,6 +373,14 @@ export default function App() {
               🖥️ Admin Panel {pendingCount > 0 && `(${pendingCount})`}
             </button>
             <button
+              onClick={() => setActiveTab('apk')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap ${
+                activeTab === 'apk' ? 'bg-[#C79A3E] text-slate-950 font-black' : 'bg-amber-100 text-amber-900 font-bold'
+              }`}
+            >
+              ⚡ Build APK
+            </button>
+            <button
               onClick={() => setActiveTab('architecture')}
               className={`px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap ${
                 activeTab === 'architecture' ? 'bg-[#0F3D3E] text-white' : 'bg-slate-100 text-slate-700'
@@ -382,7 +402,7 @@ export default function App() {
                 activeTab === 'code' ? 'bg-[#0F3D3E] text-white' : 'bg-slate-100 text-slate-700'
               }`}
             >
-              Code (17)
+              Code (27)
             </button>
             <button
               onClick={() => setActiveTab('guide')}
@@ -410,6 +430,7 @@ export default function App() {
             onToggleCategory={handleToggleCategory}
             onUpdateAppTitle={setDynamicAppTitle}
             onOpenAdminPanel={() => setActiveTab('admin')}
+            onOpenApkStation={() => setActiveTab('apk')}
           />
         )}
 
@@ -427,6 +448,8 @@ export default function App() {
             onSwitchToMobile={() => setActiveTab('simulator')}
           />
         )}
+
+        {activeTab === 'apk' && <ApkBuildStation dynamicAppTitle={dynamicAppTitle} />}
 
         {activeTab === 'architecture' && <ArchitectureExplorer />}
         {activeTab === 'rls' && <SupabaseRLSExplorer />}

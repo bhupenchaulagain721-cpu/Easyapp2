@@ -10,7 +10,7 @@ export const CodeViewer: React.FC = () => {
   const [isZipping, setIsZipping] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
-  const categories = ['All', 'Configuration', 'Core & Theme', 'Domain Layer', 'Data Layer', 'Presentation', 'Database / Supabase'];
+  const categories = ['All', 'Configuration', 'Core & Theme', 'Domain Layer', 'Data Layer', 'Presentation', 'Database / Supabase', 'Android Native'];
 
   const filteredFiles = FLUTTER_FILES.filter((file) => {
     const matchesSearch =

@@ -148,6 +148,86 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL
 );
 
+-- 8a. BRANCHES TABLE (PROVINCIAL & REGIONAL OFFICES)
+CREATE TABLE IF NOT EXISTS public.branches (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    name_np TEXT NOT NULL,
+    province TEXT NOT NULL,
+    city TEXT NOT NULL,
+    address TEXT NOT NULL,
+    phone_number TEXT,
+    email TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_branches_province ON public.branches(province);
+
+-- 8b. ADVERTISEMENTS & SPONSORSHIPS TABLE (REPUBLIC NEPAL TV ADS ENGINE)
+CREATE TABLE IF NOT EXISTS public.ads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    title_np TEXT,
+    image_url TEXT NOT NULL,
+    redirect_url TEXT,
+    sponsor_name TEXT NOT NULL DEFAULT 'Republic Nepal TV & Advertising Pvt. Ltd.',
+    placement TEXT NOT NULL DEFAULT 'home' CHECK (placement IN ('home', 'home_banner', 'live_tv', 'category_top', 'interstitial')),
+    priority INT NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'expired')),
+    submitted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    contact_phone TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    start_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    end_date TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ads_active_placement ON public.ads(status, is_active, placement);
+
+-- 8c. OFFERS & DEALS TABLE
+CREATE TABLE IF NOT EXISTS public.offers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    business_id UUID REFERENCES public.businesses(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    title_np TEXT NOT NULL,
+    description TEXT,
+    discount_percent INT DEFAULT 0,
+    coupon_code TEXT,
+    valid_until TIMESTAMP WITH TIME ZONE,
+    status TEXT NOT NULL DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'rejected')),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_offers_business ON public.offers(business_id);
+CREATE INDEX IF NOT EXISTS idx_offers_active ON public.offers(status, is_active);
+
+-- 8d. TICKER ITEMS TABLE (LIVE NEWS, NOTICES & MARKET RATES)
+-- Matches exact schema: kind IN ('news', 'notice', 'market_rate'), sort_order, fee_amount, status, approved_by, created_by
+CREATE TABLE IF NOT EXISTS public.ticker_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message TEXT NOT NULL,
+    message_np TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'news' CHECK (kind IN ('news', 'notice', 'market_rate')),
+    rate_item TEXT, -- e.g. 'Gold (छापावाल सुन)', 'Tomato Big (गोलभेडा ठुलो)'
+    rate_value TEXT, -- e.g. 'रु. १,६२,००० / तोला', 'रु. ५५ / केजी'
+    sort_order INT NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    fee_amount NUMERIC(10,2) DEFAULT 0.00,
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    approved_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    contact_phone TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ticker_items_sort ON public.ticker_items(status, is_active, sort_order);
+
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_profiles_status ON public.profiles(status);
 
@@ -250,15 +330,17 @@ VALUES
     'app_config',
     '{
         "app_title": "Easy App",
-        "app_title_np": "इजी एप (Easy App)",
-        "tagline": "All Digital Services & Live Media in One Place",
+        "app_title_np": "इजी एप",
+        "tv_name": "RN TV",
+        "footer_text": "रिपब्लिक नेपाल टिभी एण्ड एड्भटाइजिङग प्रा लि",
+        "logo_url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200",
         "owner_company": "Republic Nepal TV & Advertising Pvt. Ltd.",
-        "support_phone": "+977-1-4XXXXXX",
+        "support_phone": "+977-1-4112233",
         "maintenance_mode": false,
         "primary_color": "#0F3D3E",
         "accent_color": "#C79A3E"
     }'::jsonb,
-    'Global app branding and operational settings.'
+    'Global app branding, logo, tv_name, footer_text, and operational settings.'
 )
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
@@ -339,3 +421,74 @@ CREATE POLICY "Users update own profile" ON public.profiles FOR UPDATE
             status = (SELECT p.status FROM public.profiles p WHERE p.id = auth.uid())
         )
     );
+
+-- BRANCHES: Public read active, Admins manage
+ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read active branches" ON public.branches FOR SELECT
+    USING (is_active = true OR public.is_platform_admin());
+CREATE POLICY "Admins manage branches" ON public.branches FOR ALL
+    USING (public.is_super_admin()) WITH CHECK (public.is_super_admin());
+
+-- ADS: Public read approved & active (home placement), Public insert pending, Admins manage all
+ALTER TABLE public.ads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read approved ads" ON public.ads FOR SELECT
+    USING ((status = 'approved' AND is_active = true) OR public.is_platform_admin());
+CREATE POLICY "Public insert pending ads" ON public.ads FOR INSERT
+    WITH CHECK (status = 'pending');
+CREATE POLICY "Admins manage ads" ON public.ads FOR ALL
+    USING (public.is_super_admin()) WITH CHECK (public.is_super_admin());
+
+-- OFFERS: Public read approved & active, Business Owners manage own, Admins manage all
+ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read approved offers" ON public.offers FOR SELECT
+    USING ((status = 'approved' AND is_active = true) OR public.is_platform_admin());
+CREATE POLICY "Owners manage own offers" ON public.offers FOR ALL
+    USING (
+        public.is_super_admin() OR
+        EXISTS (
+            SELECT 1 FROM public.businesses b
+            WHERE b.id = offers.business_id AND b.owner_id = auth.uid()
+        )
+    );
+
+-- TICKER ITEMS: Public read approved & active, Public insert pending, Admins manage all
+ALTER TABLE public.ticker_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read approved ticker items" ON public.ticker_items FOR SELECT
+    USING ((status = 'approved' AND is_active = true) OR public.is_platform_admin());
+CREATE POLICY "Public insert pending ticker items" ON public.ticker_items FOR INSERT
+    WITH CHECK (status = 'pending');
+CREATE POLICY "Admins manage ticker items" ON public.ticker_items FOR ALL
+    USING (public.is_super_admin()) WITH CHECK (public.is_super_admin());
+
+-- 14. INITIAL SEEDS: BRANCHES, ADS, OFFERS, TICKER ITEMS
+INSERT INTO public.branches (name, name_np, province, city, address, phone_number, email)
+VALUES
+('Kathmandu Central HQ', 'काठमाडौँ केन्द्रीय कार्यालय', 'Bagmati Province', 'Kathmandu', 'Tinkune, Subidhanagar', '+977-1-4112233', 'hq@republicnepal.tv'),
+('Pokhara Regional Office', 'पोखरा प्रादेशिक शाखा', 'Gandaki Province', 'Pokhara', 'New Road, Pokhara-8', '+977-61-523456', 'gandaki@republicnepal.tv'),
+('Biratnagar Koshi Hub', 'विराटनगर कोशी शाखा', 'Koshi Province', 'Biratnagar', 'Main Road, Ward 2', '+977-21-456789', 'koshi@republicnepal.tv'),
+('Butwal Lumbini Hub', 'बुटवल लुम्बिनी शाखा', 'Lumbini Province', 'Butwal', 'Traffic Chowk, Butwal', '+977-71-543210', 'lumbini@republicnepal.tv')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.ads (title, title_np, image_url, redirect_url, sponsor_name, placement, priority, status, is_active)
+VALUES
+('Republic Nepal TV Live 24/7', 'रिपब्लिक नेपाल टिभी २४/७ प्रत्यक्ष', 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=800', 'https://republicnepal.tv', 'Republic Nepal TV & Advertising Pvt. Ltd.', 'home', 1, 'approved', true),
+('Organic Himalayan Herbs & Food Festival', 'जैविक हिमाली जडीबुटी तथा खाद्यान्न महोत्सव', 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800', '/category/kirana-retail', 'Nepal Agriculture Chamber', 'home', 2, 'approved', true),
+('Nepal Real Estate & Housing Expo 2026', 'नेपाल घरजग्गा तथा आवास मेला २०२६', 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800', '/category/real-estate', 'Real Estate Association of Nepal', 'home', 3, 'approved', true)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.offers (title, title_np, description, discount_percent, coupon_code, status, is_active)
+VALUES
+('Grand Opening Grocery Discount', 'किराना तथा दैनिक उपभोग्यमा १५% विशेष छुट', 'Applicable across all verified Kirana retail stores on Easy App', 15, 'EASYKIRANA15', 'approved', true),
+('Ayurvedic Health Consultation Token', 'क्लिनिक तथा ओपिडी परामर्शमा नि:शुल्क टोकन', 'Free preliminary doctor consultation token at partner clinics', 25, 'SWASTHYA2026', 'approved', true),
+('Local Haat Farmers Seasonal Offer', 'हाट बजार स्थानीय तरकारी तथा फलफूल', 'Direct farm-to-table fresh seasonal produce with zero markup', 10, 'HAATBAZAR10', 'approved', true)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.ticker_items (message, message_np, kind, rate_item, rate_value, sort_order, status, is_active)
+VALUES
+('Gold (छापावाल सुन): रु. १,६२,००० / तोला | Silver (चाँदी): रु. १,९५० / तोला', 'सुन (छापावाल): रु. १,६२,०००/तोला | चाँदी: रु. १,९५०/तोला (नेपाल सुनचाँदी व्यवसायी महासंघ)', 'market_rate', 'Gold / Silver', 'रु. १,६२,०००', 1, 'approved', true),
+('Kalimati Veg: Tomato (गोलभेडा) रु. ५५/केजी | Potato (आलु) रु. ४२/केजी | Onion (प्याज) रु. ८५/केजी', 'कालीमाटी बजार: गोलभेडा रु. ५५/केजी, रातो आलु रु. ४२/केजी, सुकेको प्याज रु. ८५/केजी', 'market_rate', 'Vegetables (कालीमाटी)', 'दैनिक दररेट', 2, 'approved', true),
+('Forex: USD $1 = NPR 134.20 | EUR €1 = NPR 146.50 | QAR 1 = NPR 36.85 (NRB Official)', 'मुद्रा विनिमय: अमेरिकी डलर १ = रु. १३४.२०, युरो १ = रु. १४६.५० (नेपाल राष्ट्र बैंक)', 'market_rate', 'Forex (विदेशी मुद्रा)', 'NRB Rate', 3, 'approved', true),
+('Republic Nepal TV: Prime-time special report broadcasting live tonight at 8:00 PM.', 'ताजा समाचार: रिपब्लिक नेपाल टिभीमा आज राति ८ बजे विशेष विश्लेषणात्मक प्रत्यक्ष प्रसारण।', 'news', 'Live TV News', 'LIVE', 4, 'approved', true),
+('Notice: Register your local business on Easy App to reach thousands of verified customers.', 'सूचना: आफ्नो पसल, क्लिनिक वा सेवा Easy App मा दर्ता गरी नयाँ ग्राहकसम्म पुग्नुहोस्।', 'notice', 'Notice', 'Public', 5, 'approved', true)
+ON CONFLICT DO NOTHING;
+

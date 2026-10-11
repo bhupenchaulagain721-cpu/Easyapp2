@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
 /// Application ThemeData definitions for Light & Dark mode.
@@ -8,7 +7,11 @@ class AppTheme {
 
   /// Light Theme
   static ThemeData get lightTheme {
-    final baseTextTheme = GoogleFonts.plusJakartaSansTextTheme(ThemeData.light().textTheme);
+    final baseTextTheme = ThemeData.light().textTheme.apply(
+      fontFamily: 'sans-serif',
+      bodyColor: AppColors.lightTextPrimary,
+      displayColor: AppColors.lightTextPrimary,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -118,7 +121,11 @@ class AppTheme {
 
   /// Dark Theme
   static ThemeData get darkTheme {
-    final baseTextTheme = GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme);
+    final baseTextTheme = ThemeData.dark().textTheme.apply(
+      fontFamily: 'sans-serif',
+      bodyColor: AppColors.darkTextPrimary,
+      displayColor: AppColors.darkTextPrimary,
+    );
 
     return ThemeData(
       useMaterial3: true,
