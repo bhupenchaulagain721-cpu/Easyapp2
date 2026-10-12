@@ -162,7 +162,7 @@ class SupabaseDataRepository {
       ),
       TickerItemModel(
         id: 't3',
-        message: 'Forex: USD $1 = NPR 134.20 | EUR €1 = NPR 146.50 | QAR 1 = NPR 36.85 (NRB Official)',
+        message: 'Forex: USD \$1 = NPR 134.20 | EUR €1 = NPR 146.50 | QAR 1 = NPR 36.85 (NRB Official)',
         messageNp: 'मुद्रा विनिमय: अमेरिकी डलर १ = रु. १३४.२०, युरो १ = रु. १४६.५० (नेपाल राष्ट्र बैंक)',
         kind: 'market_rate',
         rateItem: 'Forex (विदेशी मुद्रा)',

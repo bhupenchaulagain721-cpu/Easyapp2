@@ -71,11 +71,21 @@ class AuthGate extends ConsumerWidget {
     // Role-based multi-dashboard dispatch
     switch (user.role) {
       case AppRole.superAdmin:
+      case AppRole.platformAdmin:
+      case AppRole.supportAdmin:
         return const AdminDashboard();
       case AppRole.businessOwner:
+      case AppRole.businessAdmin:
+      case AppRole.branchManager:
+      case AppRole.departmentManager:
       case AppRole.staff:
+      case AppRole.deliveryPartner:
+      case AppRole.serviceProvider:
         return const BusinessDashboard();
       case AppRole.customer:
+      case AppRole.guest:
+      case AppRole.partner:
+      default:
         return const CustomerDashboard();
     }
   }

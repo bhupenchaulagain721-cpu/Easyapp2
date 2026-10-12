@@ -2005,11 +2005,13 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
                       if (!newsHeadline) return;
                       const newItem = {
                         id: `t_${Date.now()}`,
+                        kind: newsCategory,
                         category: newsCategory,
                         rateItem: newsCategory === 'market_rate' ? 'Market Rate' : 'Bulletin',
                         rateValue: 'NEW',
                         message: newsHeadline,
                         messageNp: newsHeadlineNp || newsHeadline,
+                        sort_order: 0,
                         status: 'pending', // Strictly 'pending' only
                       };
                       setTickerItems([newItem, ...tickerItems]);

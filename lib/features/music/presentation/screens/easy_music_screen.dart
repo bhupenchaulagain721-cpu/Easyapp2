@@ -242,7 +242,9 @@ class _EasyMusicScreenState extends ConsumerState<EasyMusicScreen> {
                       activeColor: AppColors.primary,
                       inactiveColor: Colors.black12,
                       onChanged: (val) {
-                        _audioPlayer.seek(Duration(seconds: val.toInt()));
+                        setState(() {
+                          _position = Duration(seconds: val.toInt());
+                        });
                       },
                     ),
                     Padding(
