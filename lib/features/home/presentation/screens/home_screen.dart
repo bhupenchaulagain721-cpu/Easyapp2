@@ -216,7 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.12),
+                              color: AppColors.primary.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(Icons.campaign_rounded, color: AppColors.primary, size: 22),
@@ -416,7 +416,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.accent.withValues(alpha: 0.2),
+                            color: AppColors.accent.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.featured_video_rounded, color: AppColors.accent, size: 22),
@@ -623,7 +623,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   Text(
                     appConfig.ownerCompany,
-                    style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -670,10 +670,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.accent.withValues(alpha: 0.5)),
+                    border: Border.all(color: AppColors.accent.withOpacity(0.5)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withOpacity(0.04),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -750,7 +750,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
+                        color: Colors.black.withOpacity(0.15),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -826,7 +826,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ? 'प्रत्यक्ष २४/७ डिजिटल तथा स्याटेलाइट प्रसारण हेर्न यहाँ थिच्नुहोस्'
                                   : 'Tap to watch official 24/7 digital live stream',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.75),
+                                color: Colors.white.withOpacity(0.75),
                                 fontSize: 11,
                               ),
                             ),
@@ -863,7 +863,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
+                              color: Colors.black.withOpacity(0.12),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -876,8 +876,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withValues(alpha: 0.1),
-                                Colors.black.withValues(alpha: 0.8),
+                                Colors.black.withOpacity(0.1),
+                                Colors.black.withOpacity(0.8),
                               ],
                             ),
                           ),
@@ -1007,7 +1007,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           border: Border.all(color: Colors.amber.shade200),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
+                              color: Colors.black.withOpacity(0.03),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -1109,7 +1109,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         border: Border.all(color: Colors.grey.shade200),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
+                            color: Colors.black.withOpacity(0.03),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -1126,7 +1126,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: mod.color.withValues(alpha: 0.12),
+                                  color: mod.color.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Icon(mod.icon, color: mod.color, size: 20),
@@ -1242,7 +1242,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: Colors.black.withOpacity(0.15),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -1318,7 +1318,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ? 'प्रत्यक्ष डिजिटल तथा स्याटेलाइट प्रसारण'
                             : 'Official 24/7 Digital Satellite Broadcast',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: Colors.white.withOpacity(0.8),
                           fontSize: 12,
                         ),
                       ),
@@ -1343,7 +1343,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.25),
+                  color: Colors.black.withOpacity(0.25),
                   blurRadius: 14,
                   offset: const Offset(0, 6),
                 ),
@@ -1358,8 +1358,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.5),
-                        Colors.black.withValues(alpha: 0.85),
+                        Colors.black.withOpacity(0.5),
+                        Colors.black.withOpacity(0.85),
                       ],
                     ),
                   ),
@@ -1422,11 +1422,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade600.withValues(alpha: 0.9),
+                            color: Colors.red.shade600.withOpacity(0.9),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.red.withValues(alpha: 0.4),
+                                color: Colors.red.withOpacity(0.4),
                                 blurRadius: 16,
                                 spreadRadius: 4,
                               ),

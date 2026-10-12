@@ -62,7 +62,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.12),
+                    backgroundColor: Colors.white.withOpacity(0.12),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
@@ -77,12 +77,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     width: 96,
                     height: 96,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(color: AppColors.accent, width: 2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.25),
+                          color: Colors.black.withOpacity(0.25),
                           blurRadius: 24,
                           offset: const Offset(0, 12),
                         ),
@@ -129,7 +129,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     AppStrings.of(lang, 'splashTagline'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
+                      color: Colors.white.withOpacity(0.85),
                       fontSize: 12,
                       height: 1.5,
                       fontWeight: FontWeight.w500,

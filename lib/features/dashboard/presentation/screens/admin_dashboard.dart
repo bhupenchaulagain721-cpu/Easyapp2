@@ -107,7 +107,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                     child: _TabButton(
                       title: 'प्रणाली सेटिङ',
                       subtitle: 'App Config',
-                      isSelected: _activeTab === 0,
+                      isSelected: _activeTab == 0,
                       onTap: () => setState(() => _activeTab = 0),
                     ),
                   ),
@@ -115,7 +115,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                     child: _TabButton(
                       title: 'मोड्युल तथा समूह',
                       subtitle: 'Categories',
-                      isSelected: _activeTab === 1,
+                      isSelected: _activeTab == 1,
                       onTap: () => setState(() => _activeTab = 1),
                     ),
                   ),
@@ -123,7 +123,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                     child: _TabButton(
                       title: 'खाता नियन्त्रण',
                       subtitle: 'Moderation',
-                      isSelected: _activeTab === 2,
+                      isSelected: _activeTab == 2,
                       onTap: () => setState(() => _activeTab = 2),
                     ),
                   ),

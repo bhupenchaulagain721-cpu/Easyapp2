@@ -19,11 +19,14 @@ class AppColors {
 
   // Light Theme Surfaces
   static const Color lightBackground = Color(0xFFF7F9FA);
+  static const Color backgroundLight = Color(0xFFF7F9FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFFFFFFF);
   static const Color lightBorder = Color(0xFFE2E8F0);
   static const Color lightTextPrimary = Color(0xFF0F172A);
+  static const Color textPrimaryLight = Color(0xFF0F172A);
   static const Color lightTextSecondary = Color(0xFF475569);
+  static const Color textSecondaryLight = Color(0xFF475569);
   static const Color lightTextMuted = Color(0xFF94A3B8);
 
   // Dark Theme Surfaces

@@ -66,7 +66,7 @@ class ProfileScreen extends ConsumerWidget {
                   border: Border.all(color: Colors.grey.shade200),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -150,21 +150,21 @@ class ProfileScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.emerald.shade50,
+                  color: Colors.green.shade50,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.emerald.shade200),
+                  border: Border.all(color: Colors.green.shade200),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.security_rounded, color: Colors.emerald.shade800, size: 18),
+                        Icon(Icons.security_rounded, color: Colors.green.shade800, size: 18),
                         const SizedBox(width: 8),
                         Text(
                           AppStrings.of(lang, 'privacyNotice'),
                           style: TextStyle(
-                            color: Colors.emerald.shade900,
+                            color: Colors.green.shade900,
                             fontWeight: FontWeight.w900,
                             fontSize: 12,
                           ),
@@ -175,7 +175,7 @@ class ProfileScreen extends ConsumerWidget {
                     Text(
                       AppStrings.of(lang, 'privacyDesc'),
                       style: TextStyle(
-                        color: Colors.emerald.shade800,
+                        color: Colors.green.shade800,
                         fontSize: 11,
                         height: 1.4,
                       ),

@@ -179,7 +179,7 @@ class _EasyMusicScreenState extends ConsumerState<EasyMusicScreen> {
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
+                            color: AppColors.primary.withOpacity(0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -218,7 +218,7 @@ class _EasyMusicScreenState extends ConsumerState<EasyMusicScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.15),
+                        color: AppColors.accent.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -283,7 +283,7 @@ class _EasyMusicScreenState extends ConsumerState<EasyMusicScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.35),
+                                  color: AppColors.primary.withOpacity(0.35),
                                   blurRadius: 15,
                                   offset: const Offset(0, 6),
                                 ),
@@ -351,7 +351,7 @@ class _EasyMusicScreenState extends ConsumerState<EasyMusicScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                              color: isSelected ? AppColors.primary : Colors.black800,
+                              color: isSelected ? AppColors.primary : Colors.black87,
                             ),
                           ),
                           subtitle: Text(
